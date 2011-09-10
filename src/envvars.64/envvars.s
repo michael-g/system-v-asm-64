@@ -68,7 +68,7 @@ _start:
 	                              # Calculate the base address of the env-vars, which is:
 	                              # %rbp + (8 * argc) + 16
 	leaq       0x10(%rbp, %r12, 0x8), %r12 
-	testq      %r12, %r12         # Test R12 against itself to find a zero-value
+	testq      $-0x01, (%r12)     # Test R12 against -1 to find a zero-value (footnote 1)
 	jz         .Lexit
 
 .Lprintenv:
@@ -79,9 +79,9 @@ _start:
 
 	call       printf
 
-	addq       $0x8, %r12
-	testq      $-0x1, (%r12) 
-	jne        .Lprintenv
+	addq       $0x8, %r12         # Step to the next pointer 
+	testq      $-0x1, (%r12)      # Test to see whether it is zero (footnote 1)
+	jne        .Lprintenv         # Jump if not zero to print the next variable
 
 .Lexit:
 	movq       $0x3C, %rax        # index of sys_write
