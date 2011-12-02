@@ -1,8 +1,11 @@
 .section .data
 
-	argc_str:     .asciz    "argc: %d\n"
-	argv_str:     .asciz    "argv[%d]: %s\n"
-	env_str:      .asciz    "env: %s\n"
+argc_str:
+     .asciz    "argc: %d\n"
+argv_str:
+     .asciz    "argv[%d]: %s\n"
+env_str:
+     .asciz    "env: %s\n"
 
 .section .text
 	.globl _start
@@ -84,6 +87,6 @@ _start:
 	jne        .Lprintenv         # Jump if not zero to print the next variable
 
 .Lexit:
-	movq       $0x3C, %rax        # index of sys_write
+	movq       $0x3C, %rax        # index of sys_exit
 	movq       $0x0, %rdi         # exit status
 	syscall
