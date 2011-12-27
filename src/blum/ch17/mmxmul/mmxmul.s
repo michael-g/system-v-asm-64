@@ -22,11 +22,11 @@ _start:
 
 	movq	%mm0, %rcx		# move to a general purpose register
 	movw	%cx, result+0x00	# Store lowest word in address result+0
-	ror	$0x10, %rcx		# Rotate value in register right by 16 bits
+	shr	$0x10, %rcx		# Shift value in register right by 16 bits
 	movw	%cx, result+0x04	# Store low-word in address result+4
-	ror	$0x10, %rcx
+	shr	$0x10, %rcx
 	movw	%cx, result+0x08	# Store low-word in address result+8
-	ror	$0x10, %rcx
+	shr	$0x10, %rcx
 	movw	%cx, result+0x0C	# Store low-word in address result+12
 
 	movq	words0, %mm0
@@ -34,11 +34,11 @@ _start:
 
 	movq	%mm0, %rcx
 	movw	%cx, result+0x02	# Store the low-word in result+2 (to make an int)
-	ror	$0x10, %rcx
+	shr	$0x10, %rcx
 	movw	%cx, result+0x06
-	ror	$0x10, %rcx
+	shr	$0x10, %rcx
 	movw	%cx, result+0x0A
-	ror	$0x10, %rcx
+	shr	$0x10, %rcx
 	movw	%cx, result+0x0E
 
 	movw	$0x04, %ax		# Number of arguments to varargs function
