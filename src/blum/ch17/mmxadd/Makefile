@@ -1,9 +1,9 @@
-all: pmull.o
-	ld --dynamic-linker /lib/ld-linux-x86-64.so.2 -o pmull -lc pmull.o
+all: mmxadd.o
+	ld --dynamic-linker /lib/ld-linux-x86-64.so.2 -o mmxadd -lc mmxadd.o
 
-pmull.o: pmull.s
-	as -gstabs -o pmull.o pmull.s
+mmxadd.o: mmxadd.s
+	as -gstabs -o mmxadd.o mmxadd.s
 
 clean:
-	@$(RM) *.o pmull
+	@$(RM) *.o mmxadd
 
