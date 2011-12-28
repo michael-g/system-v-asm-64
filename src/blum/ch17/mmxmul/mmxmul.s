@@ -4,7 +4,9 @@ words0:
 words1:
 	.short	32, 64, 128, 256
 output:
-	.asciz	"Calculation is (2*32), (4*64), (8*128), (16*256)\nResult should be: 64, 256, 1024, 4096\nValues are:       %d, %d, %d, %d\n"
+	.ascii	"Calculation is (2*32), (4*64), (8*128), (16*256)\n"
+	.ascii	"Result should be: 64, 256, 1024, 4096\n"
+	.asciz	"Values are:       %d, %d, %d, %d\n"
 
 .section .bss
 	.lcomm	result, 16		# Values are 4 32 bit integers
