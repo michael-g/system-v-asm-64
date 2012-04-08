@@ -1,0 +1,3 @@
+These two simple test classes simply try to investigate the way in which 
+the __attribute ((constructor)) operates and the assembly you would need
+to write in order to duplicate it.

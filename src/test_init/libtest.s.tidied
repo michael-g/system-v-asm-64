@@ -1,0 +1,16 @@
+
+.section .ctors, "aw", @progbits
+	.align 8
+	.quad	my_arse
+
+.section .bss
+	.comm	started_at, 16, 16
+
+.section .text
+	.globl	my_arse
+	.type	my_arse, @function
+my_arse:
+	movq	started_at@GOTPCREL(%rip), %rdi
+	xorl	%esi, %esi
+	jmp	gettimeofday@PLT
+
