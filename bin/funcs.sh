@@ -90,15 +90,16 @@ function dwle {
  }
 
 function gensvg {
-	if [ $# -ne 5 ] ; then
-		echo "Usage: gensvg <offset> <len> \$(segfind <tkn> <lib>) <outname>" >&2 
+	if [ $# -ne 4 ] ; then
+		echo "Usage: gensvg <hex_offset> <hex_len> <dsofile> <outname>" >&2 
 	else 
-		offset=$1
-		len=$2
-		file=$(segfind $3 $4)
-		hexbase=0x$(echo $file | cut -f_ -d1)
-		varargs=$(readelf -SW $4 | awk -f resw.awk)
-		outfile=$5
-		hexdump -vC -s $offset -n $len $file | sed -n '1!G;h;$p' | awk -f hdpp.awk -v hexbase=$hexbase -v varargs=$varargs > $outfile
+		len=$((16#$2))
+		imgbase=$(libbase $3)
+		imgaddr=$(evalhex "(($imgbase + $1)/1000)*1000")
+		offset=$(evalhex "$imgbase + $1 - $imgaddr")
+		infile=$(find . -type f -name "$imgaddr*" | cut -d/ -f2)
+		varargs=$(readelf -SW $3 | awk -f $(which resw.awk))
+		outfile=$4
+		hexdump -vC -s 0x$offset -n $len $infile | sed -n '1!G;h;$p' | awk -f $(which hdpp.awk) -v imgbase=0x$imgbase -v fileoff=0x$imgaddr -v varargs=$varargs > $outfile
 	fi
  }
