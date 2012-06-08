@@ -89,6 +89,11 @@ function dwle {
 	hexdump -ve '4/1 "%02x " "\n"' -s $1 -n 4 libreloc.so | awk '{print $4 $3 $2 $1}'
  }
 
+function gen2 {
+	varargs=$(readelf -SW libreloc.so | awk -f $(which resw.awk))
+	awk -f $(which vmimg.awk) -v filenames=7f436d118000_7f436d119000_r-xp_0,7f436d318000_7f436d319000_r--p_0,7f436d319000_7f436d31a000_rw-p_1000 | awk -f $(which hdpp.awk) -v imgbase=0x7f436d118000 -v fileoff=0 -v varargs=$varargs > tmp.svg
+ }
+
 function gensvg {
 	if [ $# -ne 4 ] ; then
 		echo "Usage: gensvg <hex_offset> <hex_len> <dsofile> <outname>" >&2 

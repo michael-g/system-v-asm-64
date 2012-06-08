@@ -8,7 +8,7 @@ BEGIN {
 	split(valarrays[2], r_offsets, ",");
 	split(valarrays[3], r_lengths, ",");
 	len=length(r_names);
-	for (i=1;i<len;i++) {
+	for (i=1;i<=len;i++) {
 		t_offsets[r_names[i]]=strtonum(r_offsets[i]);
 		t_lengths[r_names[i]]=strtonum(r_lengths[i]);
 	}
@@ -28,7 +28,16 @@ BEGIN {
 	print " >";
 	print " <style type=\"text/css\"><![CDATA[";
 
-	print " .none {fill:#d1d1d1 }"; 
+	print " .none {fill:#d1d1d1 }"; # light-grey
+	print " .note.gnu.build-id {fill:#0a1a1a }"; # very dark blue-grey
+	print " .hash {fill:#1f4c4c }"; # dark blue-grey
+	print " .gnu.hash {fill:#296666 }"; # blue-grey
+	print " .dynstr {fill:#334c00 }"; # dark-green
+	print " .dynsym {fill:#527a00 }"; # lighter-green
+	print " .gnu.version {fill:#727272 }"; # some kind of grey
+	print " .gnu.version_r {fill:#b5b5b5 }"; # some kind of grey
+	print " .rela.dyn {fill:#855C33 }"; # light-brown
+	print " .rela.plt {fill:#754719 }"; # mid-brown
 	print " .init {fill:#990033 }";# purple
 	print " .plt {fill:#ff6600 }"; # orange
 	print " .text {fill:#cc0000 }"; # red
