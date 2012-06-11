@@ -2,7 +2,6 @@
 
 BEGIN {
 	imgbase=strtonum(imgbase);
-	fileoff=strtonum(fileoff);
 	split(varargs, valarrays, ";");
 	split(valarrays[1], r_names, ",");
 	split(valarrays[2], r_offsets, ",");
@@ -89,7 +88,6 @@ function getSection(pos) {
 
 /^[0-9]/ {
 	lineoff=strtonum("0x"$1);
-	realoff=fileoff+lineoff;
 	ascstart=index($0, "|");
 	ascend=length($0);
 	addrend=length($1);
@@ -99,14 +97,14 @@ function getSection(pos) {
 	split(bytestr, bytearr, " ");
 	bytelen=length(bytearr);
 
-	printf "<tspan x=\"10\" dy=\"16\">%x</tspan>", realoff;
+	printf "<tspan x=\"10\" dy=\"16\">%x</tspan>", lineoff;
 	if (NF == 1) {
 		print "";
 		next;
 	}
 	for (i = 1 ; i <= bytelen ; i++) {
+		byteoff=lineoff+i-1;
 		if (i < 9) {
-			byteoff=realoff+i-1;
 			if (i == 1) {
 				s_sec=getSection(byteoff);
 				printf "<tspan dx=\"30\" class=\"%s\">", s_sec;
