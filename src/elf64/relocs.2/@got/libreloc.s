@@ -12,5 +12,6 @@ someRelocations:
 	leaq	_GLOBAL_OFFSET_TABLE_(%rip), %rcx  # Store the address of _GLOBAL_OFFSET_TABLE_ in RCX
 	addq	%rcx, %rax                         # Calculate abs address of sayHello 
 	movq	(%rax), %rdi
+#	movq	Lhello@GOTPCREL(%rip), %rdi
 	call	puts@PLT
 	ret

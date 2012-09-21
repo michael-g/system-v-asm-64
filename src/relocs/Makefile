@@ -9,7 +9,8 @@ cheatapp.o: cheatapp.c
 libcheat.so: libcheat.o
 	gcc -O2 -Wall -shared --save-temps -o libcheat.so libcheat.o
 libcheat.o: libcheat.c
-	gcc -O2 -Wall -c -fPIC --save-temps -o libcheat.o libcheat.c
+	gcc -Wall -c -fPIC --save-temps -o libcheat.o libcheat.c
+#	gcc -O2 -Wall -c -fPIC --save-temps -o libcheat.o libcheat.c
 	
 shared.so: shared.o
 	ld --dynamic-linker /lib64/ld-linux-x86-64.so.2 -shared -fPIC -o shared.so shared.o

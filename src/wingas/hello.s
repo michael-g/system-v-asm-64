@@ -1,26 +1,28 @@
-# http://en.wikibooks.org/wiki/X86_Assembly/GAS_Syntax
-# Create this file: 
-# 	gcc -S -m64 hello.c
-# Generate the executable from this file: 
-#	gcc -o hello_asm.exe -m64 hello.s
-#
-
 .section .rdata,"dr"
-.Lhellomsg:
-	.ascii "Hello, world!\0"
+.LC3:
+	.ascii "Hello %f, %f, %f, %f\15\12\0"
 
-.section .text
+.section	.text.startup,"x"
+	.p2align 4,,15
 	.globl	main
 main:
-
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-
+	subq	$72, %rsp
 	call	__main
-	leaq	.Lhellomsg(%rip), %rcx
-	call	puts
-	movl	$0, %eax
-	addq	$32, %rsp
-	popq	%rbp
+	movabsq	$4609884578576439706, %r9
+	movabsq	$4609434218613702656, %r8
+	movabsq	$4607182418800017408, %rdx
+	movabsq	$4610334938539176755, %rax
+	movq	%r9, 56(%rsp)
+	movsd	56(%rsp), %xmm3
+	movq	%r8, 56(%rsp)
+	movsd	56(%rsp), %xmm2
+	movq	%rdx, 56(%rsp)
+	movsd	56(%rsp), %xmm1
+	movq	%rax, 32(%rsp)
+	leaq	.LC3(%rip), %rcx
+	call	printf
+	xorl	%eax, %eax
+	addq	$72, %rsp
 	ret
+	.seh_endproc
+	.def	printf;	.scl	2;	.type	32;	.endef
