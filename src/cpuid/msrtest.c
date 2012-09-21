@@ -30,11 +30,11 @@ main(void)
 	
 	e = pread(fd, (void *)&freq, 0x08, 0xE7);
 	AZ("While reading IA32_MPERF",e);
-	printf("IA32_MPERF (0xE7) is %Ld\n", (unsigned long long)e);	
+	printf("IA32_MPERF (0xE7) is %Ld\n", (unsigned long long)freq);	
 	
 	e = pread(fd, (void*)&freq, 0x08, 0xE8);
 	AZ("While reading IA32_MPERF",e);
-	printf("IA32_MPERF (0xE8) is %Ld\n", (unsigned long long)e);	
+	printf("IA32_MPERF (0xE8) is %Ld\n", (unsigned long long)freq);	
 	
 	e = close(fd);
 	if (e < 0) {
