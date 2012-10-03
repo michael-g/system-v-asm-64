@@ -8,7 +8,6 @@ static int csrmod_init(void)
 	long int val;
 	__asm__ __volatile__("mov %%cr4, %0" : "=r"(val));
 	val |= 0x100;           // Enable RDPMC
-	val &= ~4;              // Enable RDTSC
 	__asm__ __volatile__("mov %0, %%cr4" : : "r"(val));
 	printk(KERN_ALERT "Module csrmod loaded\n");
 	return 0;
