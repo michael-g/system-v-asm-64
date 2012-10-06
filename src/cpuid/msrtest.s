@@ -126,8 +126,7 @@ main:
 	jmp	.L3
 .L5:
 	.loc 1 33 0 is_stmt 1
-	movl	-4(%rbp), %eax
-	movslq	%eax, %rdx
+	movq	-24(%rbp), %rdx
 	movl	$.LC8, %eax
 	movq	%rdx, %rsi
 	movq	%rax, %rdi
@@ -151,8 +150,7 @@ main:
 	jmp	.L3
 .L6:
 	.loc 1 37 0 is_stmt 1
-	movl	-4(%rbp), %eax
-	movslq	%eax, %rdx
+	movq	-24(%rbp), %rdx
 	movl	$.LC9, %eax
 	movq	%rdx, %rsi
 	movq	%rax, %rdi
@@ -449,8 +447,6 @@ main:
 	.string	"long long unsigned int"
 .LASF11:
 	.string	"freq"
-.LASF14:
-	.string	"/home/michaelg/sandbox/asm-git/src/cpuid"
 .LASF1:
 	.string	"unsigned char"
 .LASF7:
@@ -459,6 +455,8 @@ main:
 	.string	"long int"
 .LASF13:
 	.string	"msrtest.c"
+.LASF14:
+	.string	"/home/michaelg/dev/asm-git/src/cpuid"
 .LASF2:
 	.string	"short unsigned int"
 .LASF4:

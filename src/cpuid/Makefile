@@ -1,4 +1,4 @@
-all: avx brand msr msrtest family
+all: avx brand msr msrtest family leaf0ah
 
 avx: avx.o
 	ld --dynamic-linker=/lib64/ld-linux-x86-64.so.2 -o avx -lc avx.o
@@ -27,6 +27,12 @@ family: family.o
 family.o: family.s
 	as -g -o family.o family.s
 
+leaf0ah: leaf0ah.o
+	ld --dynamic-linker=/lib64/ld-linux-x86-64.so.2 -o leaf0ah -lc leaf0ah.o
+
+leaf0ah.o: leaf0ah.s
+	as -g -o leaf0ah.o leaf0ah.s
+
 clean:
-	rm -f brand avx msr msrtest *.o *.so
+	rm -f brand avx msr msrtest leaf0ah *.o *.so
 
