@@ -48,57 +48,79 @@ static long long read_msr(unsigned int ecx) {
 	unsigned long long result = 0;
 	__asm__ __volatile__("rdmsr" : "=a"(eax), "=d"(edx) : "c"(ecx));
 	result = eax | (unsigned long long)edx << 0x20;
-	printk(KERN_ALERT "Module msrmod: Read 0x%016llx (0x%08x:0x%08x) from MSR 0x%08x\n", result, edx, eax, ecx);
+	printk(KERN_ALERT "Module msrdrv: Read 0x%016llx (0x%08x:0x%08x) from MSR 0x%08x\n", result, edx, eax, ecx);
 	return result;
 }
 
 static void write_msr(int ecx, unsigned int eax, unsigned int edx) {
-	printk(KERN_ALERT "Module msrmod: Writing 0x%08x:0x%08x to MSR 0x%04x\n", edx, eax, ecx);
+	printk(KERN_ALERT "Module msrdrv: Writing 0x%08x:0x%08x to MSR 0x%04x\n", edx, eax, ecx);
 	__asm__ __volatile__("wrmsr" : : "c"(ecx), "a"(eax), "d"(edx));
 }
 
 static long msrdrv_ioctl(struct file *f, unsigned int ioctl_num, unsigned long ioctl_param) 
 {
-	struct MsrInOut *msrops = (struct MsrInOut*)ioctl_param;
+	struct MsrInOut *msrops;
 	int i;
-	for (i = 0 ; i <= ioctl_num ; i++, msrops++) {
+	if (ioctl_num != IOCTL_MSR_CMDS) {
+		return 0;
+	}
+	msrops = (struct MsrInOut*)ioctl_param;
+	for (i = 0 ; i <= MSR_VEC_LIMIT ; i++, msrops++) {
 		switch (msrops->op) {
+		case MSR_NOP:
+			printk(KERN_ALERT "Module " DEV_NAME ": seen MSR_NOP command\n");
+			break;
+		case MSR_STOP:
+			printk(KERN_ALERT "Module " DEV_NAME ": seen MSR_STOP command\n");
+			goto label_end;
 		case MSR_READ:
+			printk(KERN_ALERT "Module " DEV_NAME ": seen MSR_READ command\n");
 			msrops->value = read_msr(msrops->ecx);
 			break;
 		case MSR_WRITE:
+			printk(KERN_ALERT "Module " DEV_NAME ": seen MSR_WRITE command\n");
 			write_msr(msrops->ecx, msrops->eax, msrops->edx);
 			break;
-		case MSR_NOP:
 		default:
-			printk(KERN_ALERT "Module msrmod: Unknown option %i\n", msrops->op);
+			printk(KERN_ALERT "Module " DEV_NAME ": Unknown option %i\n", msrops->op);
 			return 1;
 		}
 	}
+	label_end:
+
 	return 0;
 }
 
 
-static int msrmod_init(void)
+static int msrdrv_init(void)
 {
 	long int val;
-	msrdrv_dev = MKDEV( DEV_MAJOR, DEV_MINOR );
+	msrdrv_dev = MKDEV(DEV_MAJOR, DEV_MINOR);
+	register_chrdev_region(msrdrv_dev, 1, DEV_NAME);
+	msrdrv_cdev = cdev_alloc();
+	msrdrv_cdev->owner = THIS_MODULE;
+	msrdrv_cdev->ops = &msrdrv_fops;
+	cdev_init(msrdrv_cdev, &msrdrv_fops);
+	cdev_add(msrdrv_cdev, msrdrv_dev, 1);
+
 	__asm__ __volatile__("mov %%cr4, %0" : "=r"(val));	// Read %cr4
 	val |= 0x100;                                     	// Set RDPMC bit
 	__asm__ __volatile__("mov %0, %%cr4" : : "r"(val));	// Write amended value to %cr4
-	printk(KERN_ALERT "Module msrmod loaded\n");
+	printk(KERN_ALERT "Module " DEV_NAME " loaded\n");
 	return 0;
 }
 
-static void msrmod_exit(void)
+static void msrdrv_exit(void)
 {
 	long int val;
+	cdev_del(msrdrv_cdev);
+	unregister_chrdev_region(msrdrv_dev, 1);
 	__asm__ __volatile__("mov %%cr4, %0" : "=r"(val));
 	val &= ~0x100;          // Disable RDPMC
 	__asm__ __volatile__("mov %0, %%cr4" : : "r"(val));
-	printk(KERN_ALERT "Module msrmod unloaded\n");
+	printk(KERN_ALERT "Module " DEV_NAME " unloaded\n");
 }
 
-module_init(msrmod_init);
-module_exit(msrmod_exit);
+module_init(msrdrv_init);
+module_exit(msrdrv_exit);
 
