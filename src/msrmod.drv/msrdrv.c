@@ -5,6 +5,13 @@
 
 #include "msrdrv.h"
 
+#define _MG_DEBUG
+#ifdef _MG_DEBUG
+#define dprintk(args...) printk(args);
+#else
+#define dprintk(args...)
+#endif
+
 MODULE_LICENSE("Dual BSD/GPL");
 
 
@@ -48,13 +55,23 @@ static long long read_msr(unsigned int ecx) {
 	unsigned long long result = 0;
 	__asm__ __volatile__("rdmsr" : "=a"(eax), "=d"(edx) : "c"(ecx));
 	result = eax | (unsigned long long)edx << 0x20;
-	printk(KERN_ALERT "Module msrdrv: Read 0x%016llx (0x%08x:0x%08x) from MSR 0x%08x\n", result, edx, eax, ecx);
+	dprintk(KERN_ALERT "Module msrdrv: Read 0x%016llx (0x%08x:0x%08x) from MSR 0x%08x\n", result, edx, eax, ecx)
 	return result;
 }
 
 static void write_msr(int ecx, unsigned int eax, unsigned int edx) {
-	printk(KERN_ALERT "Module msrdrv: Writing 0x%08x:0x%08x to MSR 0x%04x\n", edx, eax, ecx);
+	dprintk(KERN_ALERT "Module msrdrv: Writing 0x%08x:0x%08x to MSR 0x%04x\n", edx, eax, ecx)
 	__asm__ __volatile__("wrmsr" : : "c"(ecx), "a"(eax), "d"(edx));
+}
+
+static long long read_tsc()
+{
+	unsigned eax, edx;
+	long long result;
+	__asm__ __volatile__("rdtsc" : "=a"(eax), "=d"(edx));
+	result = eax | (unsigned long long)edx << 0x20;
+	dprintk(KERN_ALERT "Module msrdrv: Read 0x%016llx (0x%08x:0x%08x) from TSC\n", result, edx, eax)
+	return result;
 }
 
 static long msrdrv_ioctl(struct file *f, unsigned int ioctl_num, unsigned long ioctl_param) 
@@ -68,21 +85,25 @@ static long msrdrv_ioctl(struct file *f, unsigned int ioctl_num, unsigned long i
 	for (i = 0 ; i <= MSR_VEC_LIMIT ; i++, msrops++) {
 		switch (msrops->op) {
 		case MSR_NOP:
-			printk(KERN_ALERT "Module " DEV_NAME ": seen MSR_NOP command\n");
+			dprintk(KERN_ALERT "Module " DEV_NAME ": seen MSR_NOP command\n")
 			break;
 		case MSR_STOP:
-			printk(KERN_ALERT "Module " DEV_NAME ": seen MSR_STOP command\n");
+			dprintk(KERN_ALERT "Module " DEV_NAME ": seen MSR_STOP command\n")
 			goto label_end;
 		case MSR_READ:
-			printk(KERN_ALERT "Module " DEV_NAME ": seen MSR_READ command\n");
+			dprintk(KERN_ALERT "Module " DEV_NAME ": seen MSR_READ command\n")
 			msrops->value = read_msr(msrops->ecx);
 			break;
 		case MSR_WRITE:
-			printk(KERN_ALERT "Module " DEV_NAME ": seen MSR_WRITE command\n");
+			dprintk(KERN_ALERT "Module " DEV_NAME ": seen MSR_WRITE command\n")
 			write_msr(msrops->ecx, msrops->eax, msrops->edx);
 			break;
+		case MSR_RDTSC:
+			dprintk(KERN_ALERT "Module " DEV_NAME ": seen MSR_RDTSC command\n")
+			msrops->value = read_tsc();
+			break;
 		default:
-			printk(KERN_ALERT "Module " DEV_NAME ": Unknown option %i\n", msrops->op);
+			dprintk(KERN_ALERT "Module " DEV_NAME ": Unknown option 0x%x\n", msrops->op)
 			return 1;
 		}
 	}
