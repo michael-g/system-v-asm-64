@@ -157,10 +157,10 @@ _start:
 	lea	0x30(%rsp), %rsi
 	call	.LaccumulateCounter
 	
-	mov	.LTscRead1 + 0x08, %rdi
-	mov	.LTscRead0 + 0x08, %rsi
+	movq	.LTscRead1 + 0x08, %rdi
+	movq	.LTscRead0 + 0x08, %rsi
 	sub	%rsi, %rdi
-	mov	%rdi, 0x38(%rsp)
+	addq	%rdi, 0x38(%rsp)
 
 	sub	$1, %r12			# Decrement loop counter
 	jnz	.LtimerLoopStart		# End loop
