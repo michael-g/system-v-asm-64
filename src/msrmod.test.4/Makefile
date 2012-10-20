@@ -3,7 +3,7 @@ all: msrtest
 msrtest: msrtest.o
 	ld --dynamic-linker=/lib64/ld-linux-x86-64.so.2 -o msrtest -lc msrtest.o
 
-msrtest.o: msrtest.s
+msrtest.o: msrtest.s msrmacro.s
 	as -g -64 -o msrtest.o msrtest.s
 
 clean:

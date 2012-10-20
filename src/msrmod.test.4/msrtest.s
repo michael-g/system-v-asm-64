@@ -32,10 +32,11 @@
 	mem_wr_ffcx 0			# zero FFC0 INSTR_RETIRED.ANY
 	mem_wr_ffcx 1			# zero FFC1 CPU_CLOCK_UNHALTED.CORE
 	mem_wr_ffcx 2			# zero FFC2 CPU_CLOCK_UNHALTED.REF
-	mem_wr_pesx 0 0x004101c2 	# Set PMC0 = UOPS_RETIRED.ALL +USR +EN @ 3C:35-7/p241 3B:19-28/p244 0xc2:0x01
-	mem_wr_pesx 1 0x0041010e 	# Set PMC3 = UOPS_ISSUED.ANY  +USR +EN @ 3C:35-7/p241 3B:19-36/p252 0x0e:0x01
-	mem_wr_pesx 2 0x00410f24 	# Set PMC1 = L1 Cache Misses  +USR +EN @ 3C:35-7/p241 3B:19-23/p239 0x24:0x08|0x04|0x03|0x01
-	mem_wr_pesx 3 0x0041412e 	# Set PMC2 = LLC Misses       +USR +EN @ 3C:35-7/p241 3B:19-1 /p217 0x2e:0x41
+#                     cm fl um ev
+	mem_wr_pesx 0 00 41 01 c2 	# Set PMC0 = UOPS_RETIRED.ALL +USR +EN @ 3C:35-7/p241 3B:19-28/p244 0xc2:0x01
+	mem_wr_pesx 1 00 41 01 0e 	# Set PMC3 = UOPS_ISSUED.ANY  +USR +EN @ 3C:35-7/p241 3B:19-36/p252 0x0e:0x01
+	mem_wr_pesx 2 00 41 0f 24 	# Set PMC1 = L1 Cache Misses  +USR +EN @ 3C:35-7/p241 3B:19-23/p239 0x24:0x08|0x04|0x03|0x01
+	mem_wr_pesx 3 00 41 41 2e 	# Set PMC2 = LLC Misses       +USR +EN @ 3C:35-7/p241 3B:19-1 /p217 0x2e:0x41
 .LTscRead0:
 	mem_rd_tsc			# Read the TSC value
 	mem_wr_gffc   0x0222		# Configure FFCs 

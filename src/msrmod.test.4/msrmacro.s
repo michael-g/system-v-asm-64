@@ -25,7 +25,7 @@
 .endm
 
 .macro mem_rd_tsc
-	set_mem 4
+	set_mem 4				# mem_rd 0x10; alternative IA32_TIME_STAMP_COUNTER MSR
 .endm
 
 # IA32_FIXED_CTR_CTRL table: 3C:35-17/251 image: 3B:18-5/127
@@ -61,18 +61,18 @@
 	_do_mem_ffcx 1 \idx 0 0
 .endm
 
-.macro _do_mem_pesx iop evtidx eax edx
-	.ifc \evtidx, 0
-		set_mem \iop 0x186 \eax \edx
+.macro _do_mem_pesx iop idx cmask flags umask evt
+	.ifc \idx, 0
+		set_mem \iop 0x186 0x\cmask\flags\umask\evt 0
 	.else
-	 .ifc \evtidx, 1
-		set_mem \iop 0x187 \eax \edx
+	 .ifc \idx, 1
+		set_mem \iop 0x187 0x\cmask\flags\umask\evt 0
 	 .else
-	  .ifc \evtidx, 2
-		set_mem \iop 0x188 \eax \edx
+	  .ifc \idx, 2
+		set_mem \iop 0x188 0x\cmask\flags\umask\evt 0
 	  .else
-	   .ifc \evtidx, 3
-		set_mem \iop 0x189 \eax \edx
+	   .ifc \idx, 3
+		set_mem \iop 0x189 0x\cmask\flags\umask\evt 0
 	   .else
 	    .warning "Unknown IA32_PERFEVTSELx counter"
 	   .endif
@@ -81,12 +81,12 @@
 	.endif
 .endm
 
-.macro mem_wr_pesx evtidx eax=0 edx=0
-	_do_mem_pesx 2 \evtidx \eax \edx
+.macro mem_wr_pesx idx cmask flags umask evt
+	_do_mem_pesx 2 \idx \cmask \flags \umask \evt
 .endm
 
-.macro mem_rd_pesx evtidx
-	_do_mem_pesx 1 \evtidx 0 0
+.macro mem_rd_pesx idx cmask flags umask evt
+	_do_mem_pesx 1 \idx 0 0 0 0
 .endm
 
 .macro _do_mem_pmcx iop pmcidx eax edx
