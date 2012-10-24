@@ -7,7 +7,8 @@ enum MsrPmcFlags {
 	FLAG_PC  = 0x00080000, // When set, the logical processor toggles the PMi pins and increments the counter when events occur; when clear, the processor toggles the PMi pins when the counter overflows.
 	FLAG_E   = 0x00040000, // Enables, when set, edge detection of the selected condition. 
 	FLAG_OS  = 0x00020000, // Condition is counted only when the logical processor is operating at privilege level 0
-	FLAG_USR = 0x00010000  // Condition is counted only when the logical processor is operating at privilege levels 1, 2 or 3
+	FLAG_USR = 0x00010000, // Condition is counted only when the logical processor is operating at privilege levels 1, 2 or 3
+	CMASK_1  = 0x01000000
 };
 
 enum MsrPerfEvt {
