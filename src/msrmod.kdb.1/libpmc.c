@@ -16,7 +16,7 @@ static int loadDriver()
 {
 	int fd = open("/dev/" DEV_NAME, O_RDWR);
 	if (fd == -1) {
-		perror("Failed to open /dev/" DEV_NAME);
+		krr("Failed to open /dev/" DEV_NAME);
 	}
 	return fd;
 }
@@ -25,7 +25,7 @@ static void closeDriver(int fd)
 {
 	int e = close(fd);
 	if (e == -1) {
-		perror("Failed to close fd");
+		krr("Failed to close fd");
 	}
 }
 
@@ -46,21 +46,6 @@ static void msr_wr_stop(struct MsrInOut *desc)
 }
 
 /*
- Configure the FFC Counters. Writes 'mask' into MSR_PERF_FIXED_CTR_CTRL.EAX. 
- Use mask value 0x222 to enable each of the three i7-2xxx FFCs
- See bit-field image in 3B:18-14/136.
- FFC0: INST_RETIRED.ANY       PMC reg 0x309
- FFC1: CPU_CLK_UNHALTED.CORE  PMC reg 0x30a
- FFC2: CPU_CLK_UNHALTED.REF   PMC reg 0x30b
- */
-/*
-static void msr_wr_perf_fixed_ctr_ctrl(struct MsrInOut *desc, unsigned int mask)
-{
-	wr_msrio(desc, MSR_WRITE, 0x38d, mask, 0);
-}
-*/
-
-/*
  Provides access to the Global Performance Counter Control. Vol 3C:35-19 defines 
  the register bit-fields; see Vol 3B:18-36/p158 for image of bitmask.
  Global PMCs low-DW 7:0
@@ -70,15 +55,6 @@ static void msr_wr_perf_global_ctrl(struct MsrInOut *desc, unsigned lowDw, unsig
 {
 	wr_msrio(desc, MSR_WRITE, 0x38f, lowDw, hiDw);
 }
-/*
- Writes values to the IA32_PERFEVTSELx register. See 3C:35-6/240,241
- */
-/*
-static void msr_wr_evt_sel_pmc(struct MsrInOut *desc, unsigned idx, unsigned lowDw)
-{
-	wr_msrio(desc, MSR_WRITE, 0x186 + idx, lowDw, 0);
-}
-*/
 
 /*
  Provides the facility to write to the General PMCs. Typical use might be to zero 
@@ -206,7 +182,9 @@ K runtest(K opv, K ecxv, K eaxv, K edxv, K testCount)
 	msr_wr_stop(ptr++);
 	
 	fd = loadDriver();
-
+	if (fd == -1) {
+		return (K)0;
+	}
 	result = execute_test(fd, pmc_reset, dyn_script, pmc_read, testCount->i);
 	
 	ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_reset);
