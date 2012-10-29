@@ -47,7 +47,7 @@
 	pmcs,:.pmc.msr[ `UOPS_ISSUED.ANY;0i;`en`usr];
 	pmcs,:.pmc.msr[ `LONGEST_LAT_CACHE.MISS;0i;`en`usr];
 	pmcs,:.pmc.msr[ `UOPS_DISPATCHED_PORT.PORT_0;0i;`en`usr];
-	pmcs,:.pmc.msr[ `UOPS_DISPATCHED_PORT.PORT_1;0i;`en`usr];
+	pmcs,:.pmc.msr[ `UOPS_DISPATCHED_PORT.PORT_5;0i;`en`usr];
 	result:.pmc.runtest[pmcs;32];
-	:flip `inst.any`clk.core`clk.ref`uops.any`llc.miss`uops.p0`uops.p1!result
+	:flip `inst.any`clk.core`clk.ref`uops.any`llc.miss`uops.p0`uops.p5!result
  };

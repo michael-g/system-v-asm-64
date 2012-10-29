@@ -136,22 +136,22 @@ static K execute_test(int fd, struct MsrInOut *pmc_reset, struct MsrInOut *pmc_c
 
 	run_baseline(fd, pmc_reset, pmc_cfg, pmc_read, pmc_fixed, ffc_fixed, testCount);
 	for (i = 0 ; i < 3 ; i++) 
-		kffc[i] = ktn(KI, testCount);
+		kffc[i] = ktn(KJ, testCount);
 	for (i = 0 ; i < 4 ; i++) 
-		kpmc[i] = ktn(KI, testCount);
+		kpmc[i] = ktn(KJ, testCount);
 
 	for (i = 0 ; i < testCount ; i++) {
 		ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_reset);
 		ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_cfg);
 		executeTest();
 		ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_read);
-		kI(kpmc[0])[i] = pmc_read[1].value - pmc_fixed[0];
-		kI(kpmc[1])[i] = pmc_read[2].value - pmc_fixed[1];
-		kI(kpmc[2])[i] = pmc_read[3].value - pmc_fixed[2];
-		kI(kpmc[3])[i] = pmc_read[4].value - pmc_fixed[3];
-		kI(kffc[0])[i] = pmc_read[5].value - pmc_fixed[0];
-		kI(kffc[1])[i] = pmc_read[6].value - pmc_fixed[1];
-		kI(kffc[2])[i] = pmc_read[7].value - pmc_fixed[2];
+		kJ(kpmc[0])[i] = pmc_read[1].value - pmc_fixed[0];
+		kJ(kpmc[1])[i] = pmc_read[2].value - pmc_fixed[1];
+		kJ(kpmc[2])[i] = pmc_read[3].value - pmc_fixed[2];
+		kJ(kpmc[3])[i] = pmc_read[4].value - pmc_fixed[3];
+		kJ(kffc[0])[i] = pmc_read[5].value - pmc_fixed[0];
+		kJ(kffc[1])[i] = pmc_read[6].value - pmc_fixed[1];
+		kJ(kffc[2])[i] = pmc_read[7].value - pmc_fixed[2];
 	}
 	result = knk(7, kffc[0], kffc[1], kffc[2], kpmc[0], kpmc[1], kpmc[2], kpmc[3]);
 	return result;
