@@ -14,8 +14,8 @@
 #define FFC_COUNT 3
 #define PMC_COUNT 4
 
-extern void execute_baseline(int times);
-extern void execute_test();
+extern void execute_baseline(int times, void (start_counters)(void), void (stop_counters)(void));
+extern void execute_test(void (start_counters)(void), void (stop_counters)(void));
 
 static int fd;
 unsigned long long *pmc_fixed;
@@ -170,7 +170,7 @@ static K run_test(int testCount)
 		ffc_fixed[i] = 0;
 
 	ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_reset);
-	execute_baseline(testCount);
+	execute_baseline(testCount, &start_baseline, &stop_baseline);
 	pmc_fixed[0] = pmc_read[1].value / testCount;
 	pmc_fixed[1] = pmc_read[2].value / testCount;
 	pmc_fixed[2] = pmc_read[3].value / testCount;
@@ -190,7 +190,7 @@ static K run_test(int testCount)
 	
 	for (i = 0 ; i < testCount ; i++) {
 		ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_reset);
-		execute_test();
+		execute_test(&start_counters, &stop_counters);
 		kJ(kpmc[0])[i] = pmc_read[1].value - pmc_fixed[0];
 		kJ(kpmc[1])[i] = pmc_read[2].value - pmc_fixed[1];
 		kJ(kpmc[2])[i] = pmc_read[3].value - pmc_fixed[2];

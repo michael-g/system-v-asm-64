@@ -5,14 +5,12 @@
 #define KXVER 3
 #include "k.h"
 
-extern void start_counters(void);
-extern void stop_counters(void);
 
-void execute_test()
+void execute_test(void (start_counters)(void), void (stop_counters)(void))
 {
 	void *handle;
 	char *error;
-	K (*bitwiseOr)(K,K);
+	K (*bitwiseOr)(K, K, void (s1)(void), void(s2)(void));
 	handle = dlopen("libkdbasm.so", RTLD_LAZY);
 	if (!handle) {
 		krr(dlerror());
@@ -27,9 +25,7 @@ void execute_test()
 	K byteVec, byteMask, result;
 	byteVec = ktn(4, 100000);
 	byteMask = kg(1);
-	start_counters();
-	result = bitwiseOr(byteVec, byteMask);
-	stop_counters();
+	result = bitwiseOr(byteVec, byteMask, start_counters, stop_counters);
 	r0(byteVec);
 	r0(byteMask);
 	r0(result);

@@ -1,3 +1,5 @@
+.include "savereg.macro.s"
+
 .section .rodata
 	.align 0x10
 .LbadTypeStr:
@@ -34,6 +36,8 @@ bitwiseOr:
 	mov       %rsp, %rbp			# Store updated SP
 	sub       $0x10, %rsp			# Reserve stack space
 	and       $~0xF, %rsp			# Align to 16-byte boundary
+	push      %rdx				# Store arg2: start_counters address: 0x08(%rsp)
+	push      %rcx				# Store arg3: stop_counters address:  0x00(%rsp)
 
 	mov       %rdi, %r12			# Save arg0: byte-vec
 	mov       %rsi, %r13			# Save arg1: byte-mask
@@ -79,7 +83,8 @@ bitwiseOr:
 	test      $0x3f, %rbx			# Test for 64-byte alignment
 	jnz       .LsingleReg			#   if not aligned, jump to generic handler
 	cmp       $0x40, %rax			# Read is aligned, check num bytes available
-	jge       .LquadReg			#   if >= 64, handle 64-bytes at a time
+#	jge       .LquadReg			#   if >= 64, handle 64-bytes at a time
+	jge       .LquadRegPre			#   if >= 64, handle 64-bytes at a time
 
 .LsingleReg:
 	movaps    0x10(%r12,%rdx,1), %xmm4	# Load 16-bytes of input
@@ -133,6 +138,10 @@ bitwiseOr:
 .LnoneRemaining:
 	jmp       .LsuccessExit
 
+.LquadRegPre:
+	m_save_regs
+	call      *0xa8(%rsp)
+	m_restore_regs
 .LquadReg:
 	movaps    0x10(%r12,%rdx,1), %xmm4	# Copy cache line into registers
 	movaps    0x20(%r12,%rdx,1), %xmm5
@@ -171,5 +180,8 @@ bitwiseOr:
 	sub       %rdx, %rax			# Subtract counter from veclen
 	cmp       $0x40, %rax			# Compare remainder against 64 bytes
 	jge       .LquadReg			#   if >= 64, repeat aligned branch
+	m_save_regs
+	call      *0xa0(%rsp)
+	m_restore_regs
 	jmp       .LloopByte			# Branch to generic loop
 
