@@ -35,8 +35,8 @@ bitwiseOr:
 	sub       $0x10, %rsp			# Reserve stack space
 	and       $~0xF, %rsp			# Align to 16-byte boundary
 
-	mov       %rdi, %r12			# Save arg0 
-	mov       %rsi, %r13			# Save arg1
+	mov       %rdi, %r12			# Save arg0: byte-vec
+	mov       %rsi, %r13			# Save arg1: byte-mask
 
 	movb      2(%rdi), %al			# Copy arg0->t to lo-byte
 	mov       %al, %bl			# Copy type

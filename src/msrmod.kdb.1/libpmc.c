@@ -8,20 +8,32 @@
 #include <stdlib.h>
 
 #include "msrdrv.h"
-#include "msrenum.h"
 #define KXVER 3
 #include "k.h"
 
-static int loadDriver()
+#define FFC_COUNT 3
+#define PMC_COUNT 4
+
+extern void execute_baseline(int times);
+extern void execute_test();
+
+static int fd;
+unsigned long long *pmc_fixed;
+unsigned long long *ffc_fixed;
+static struct MsrInOut *pmc_reset;
+static struct MsrInOut *pmc_cfg;
+static struct MsrInOut *pmc_read;
+
+static void loadDriver()
 {
-	int fd = open("/dev/" DEV_NAME, O_RDWR);
+	fd = open("/dev/" DEV_NAME, O_RDWR);
 	if (fd == -1) {
 		krr("Failed to open /dev/" DEV_NAME);
 	}
-	return fd;
+	return;
 }
 
-static void closeDriver(int fd) 
+static void closeDriver() 
 {
 	int e = close(fd);
 	if (e == -1) {
@@ -87,7 +99,8 @@ static void msr_rd_ffc(struct MsrInOut *desc, unsigned idx)
 	desc->value = 0;
 }
 
-static void run_baseline(int fd, struct MsrInOut *pmc_reset, struct MsrInOut *pmc_cfg, struct MsrInOut *pmc_read, unsigned long long *pmc_baseline, unsigned long long *ffc_baseline, int count) 
+/*
+static void run_baseline(unsigned long long *pmc_baseline, unsigned long long *ffc_baseline, int count) 
 {
 	int i;
 	for (i = 0 ; i < count ; i++) {
@@ -95,63 +108,96 @@ static void run_baseline(int fd, struct MsrInOut *pmc_reset, struct MsrInOut *pm
 		ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_cfg);
 		ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_read);
 	}
-	pmc_baseline[0] = pmc_read[1].value / count;
-	pmc_baseline[1] = pmc_read[2].value / count;
-	pmc_baseline[2] = pmc_read[3].value / count;
-	pmc_baseline[3] = pmc_read[4].value / count;
-	ffc_baseline[0] = pmc_read[5].value / count;
-	ffc_baseline[1] = pmc_read[6].value / count;
-	ffc_baseline[2] = pmc_read[7].value / count;
-}
+}*/
 
-static void record_reset(struct MsrInOut *ptr)
+static void record_reset()
 {
 	int i;
+	struct MsrInOut *ptr = pmc_reset;
 	msr_wr_perf_global_ctrl(ptr++, 0, 0);       // 1 Halt all counters
-	for (i = 0 ; i < 4 ; i++) 
+	for (i = 0 ; i < PMC_COUNT ; i++) 
 		msr_wr_pmc(ptr++, i, 0, 0);         // 5 Zero the PMCs
-	for (i = 0 ; i < 3 ; i++)
+	for (i = 0 ; i < FFC_COUNT ; i++)
 		msr_wr_ffc(ptr++, i, 0, 0);         // 8 Zero the FFCs
 	msr_wr_stop(ptr++);                         // 9
 } 
 
-static void record_read(struct MsrInOut *ptr)
+static void record_read()
 {
 	int i;
+	struct MsrInOut *ptr = pmc_read;
 	msr_wr_perf_global_ctrl(ptr++, 0, 0);       // 1 Halt all counters
-	for (i = 0 ; i < 4 ; i++) 
+	for (i = 0 ; i < PMC_COUNT ; i++) 
 		msr_rd_pmc(ptr++, i);               // 5 Read the PMCs
-	for (i = 0 ; i < 3 ; i++)
+	for (i = 0 ; i < FFC_COUNT ; i++)
 		msr_rd_ffc(ptr++, i);               // 8 Read the FFCs
 	msr_wr_stop(ptr++);                         // 9
 }
 
-extern void executeTest();
+void start_counters()
+{
+	ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_cfg);
+	return;
+}
 
-static K execute_test(int fd, struct MsrInOut *pmc_reset, struct MsrInOut *pmc_cfg, struct MsrInOut *pmc_read, int testCount) 
+void stop_counters()
+{
+	ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_read);
+	return;
+}
+
+void start_baseline()
+{
+	ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_cfg);
+	return;
+}
+
+void stop_baseline()
+{
+	ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_read);
+	return;
+}
+
+
+static K run_test(int testCount) 
 {
 	int i;
-	K result, kffc[3], kpmc[4];;
-	unsigned long long pmc_fixed[4], ffc_fixed[3];
+	K result, kffc[3], kpmc[4];
 
-	run_baseline(fd, pmc_reset, pmc_cfg, pmc_read, pmc_fixed, ffc_fixed, testCount);
-	for (i = 0 ; i < 3 ; i++) 
-		kffc[i] = ktn(KJ, testCount);
-	for (i = 0 ; i < 4 ; i++) 
+	for (i = 0 ; i < PMC_COUNT ; i++) 
+		pmc_fixed[i] = 0;
+	for (i = 0 ; i < FFC_COUNT ; i++) 
+		ffc_fixed[i] = 0;
+
+	ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_reset);
+	execute_baseline(testCount);
+	pmc_fixed[0] = pmc_read[1].value / testCount;
+	pmc_fixed[1] = pmc_read[2].value / testCount;
+	pmc_fixed[2] = pmc_read[3].value / testCount;
+	pmc_fixed[3] = pmc_read[4].value / testCount;
+	ffc_fixed[0] = pmc_read[5].value / testCount;
+	ffc_fixed[1] = pmc_read[6].value / testCount;
+	ffc_fixed[2] = pmc_read[7].value / testCount;
+
+	for (i = 0 ; i < PMC_COUNT ; i++) 
 		kpmc[i] = ktn(KJ, testCount);
-
+	
+	for (i = 0 ; i < FFC_COUNT ; i++) 
+		kffc[i] = ktn(KJ, testCount);
+	
+	for (i = 1 ; i < 1 + PMC_COUNT + FFC_COUNT ; i++)
+		pmc_read[i].value = 0;
+	
 	for (i = 0 ; i < testCount ; i++) {
 		ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_reset);
-		ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_cfg);
-		executeTest();
-		ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_read);
+		execute_test();
 		kJ(kpmc[0])[i] = pmc_read[1].value - pmc_fixed[0];
 		kJ(kpmc[1])[i] = pmc_read[2].value - pmc_fixed[1];
 		kJ(kpmc[2])[i] = pmc_read[3].value - pmc_fixed[2];
 		kJ(kpmc[3])[i] = pmc_read[4].value - pmc_fixed[3];
-		kJ(kffc[0])[i] = pmc_read[5].value - pmc_fixed[0];
-		kJ(kffc[1])[i] = pmc_read[6].value - pmc_fixed[1];
-		kJ(kffc[2])[i] = pmc_read[7].value - pmc_fixed[2];
+		kJ(kffc[0])[i] = pmc_read[5].value - ffc_fixed[0];
+		kJ(kffc[1])[i] = pmc_read[6].value - ffc_fixed[1];
+		kJ(kffc[2])[i] = pmc_read[7].value - ffc_fixed[2];
 	}
 	result = knk(7, kffc[0], kffc[1], kffc[2], kpmc[0], kpmc[1], kpmc[2], kpmc[3]);
 	return result;
@@ -159,36 +205,55 @@ static K execute_test(int fd, struct MsrInOut *pmc_reset, struct MsrInOut *pmc_c
 
 K runtest(K opv, K ecxv, K eaxv, K edxv, K testCount)
 {
-	struct MsrInOut pmc_reset[9];
-	struct MsrInOut pmc_read[9];
-	struct MsrInOut *dyn_script, *ptr;
-	int i, fd;
+	struct MsrInOut s_pmc_reset[9];
+	struct MsrInOut s_pmc_read[9];
+	unsigned long long s_ffc_fixed[FFC_COUNT];
+	unsigned long long s_pmc_fixed[PMC_COUNT]; 
+	struct MsrInOut *ptr;
+	int i;
 	long long count;
 	K result;
 
-	dyn_script = ptr = (struct MsrInOut*)malloc((opv->n + 1) * sizeof(struct MsrInOut));
-	if (ptr == NULL) {
+	// zero the fixed-cost accumulators
+	for (i = 0 ; i < PMC_COUNT ; i++)
+		s_pmc_fixed[i] = 0;
+	for (i = 0 ; i < FFC_COUNT ; i++)
+		s_ffc_fixed[i] = 0;
+
+	// set the global (static) pointers
+	ffc_fixed = s_ffc_fixed;
+	pmc_fixed = s_pmc_fixed;
+	pmc_reset = s_pmc_reset;
+	pmc_read = s_pmc_read;
+	ptr = pmc_cfg = (struct MsrInOut*)malloc((opv->n + 1) * sizeof(struct MsrInOut));
+
+	if (pmc_cfg == NULL) {
 		orr("malloc");
 		return (K)0;
 	}
+	
+	record_reset();
+	record_read();
 
-	record_reset(pmc_reset);
-	record_read(pmc_read);
-
+	// record the PMC instructions to memory
 	count = opv->n;
 	for (i = 0 ; i < count ; i++) {
 		wr_msrio(ptr++, kI(opv)[i], kI(ecxv)[i], kI(eaxv)[i], kI(edxv)[i]);
 	}
 	msr_wr_stop(ptr++);
 	
-	fd = loadDriver();
+	loadDriver();
 	if (fd == -1) {
 		return (K)0;
 	}
-	result = execute_test(fd, pmc_reset, dyn_script, pmc_read, testCount->i);
+	result = run_test(testCount->i);
 	
-	ioctl(fd, IOCTL_MSR_CMDS, (long long)pmc_reset);
-	free(dyn_script);	
+	// disable and zero the PMC MSRs
+	ioctl(fd, IOCTL_MSR_CMDS, (long long)s_pmc_reset);
+
+	// return the dynamically allocated memory
+	free(pmc_cfg);	
+	// close the MSR driver
 	closeDriver(fd);
 
 	return result;

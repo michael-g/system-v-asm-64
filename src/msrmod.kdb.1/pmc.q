@@ -78,11 +78,4 @@
 .pmc.init[];
 system "c 45 191";
 
-\
-.pmc.msr:{[mnms;cmsk;flags]
-	msr:first exec event + 256i * umask from select `int$+/[umask] by event from .pmc.evt where mnemonic in mnms mnms;
-	msr+:16777216i * cmsk;
-	msr+:+/[exec val from .pmc.flags where name in raze flags];
-	:msr
- };
 

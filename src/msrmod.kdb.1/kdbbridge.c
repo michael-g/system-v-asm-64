@@ -5,7 +5,6 @@
 #define KXVER 3
 #include "k.h"
 
-extern K bitwiseOr(K byteVec, K byteMask);
 extern void start_counters(void);
 extern void stop_counters(void);
 
@@ -14,9 +13,9 @@ void execute_test()
 	void *handle;
 	char *error;
 	K (*bitwiseOr)(K,K);
-	handle = dlopen("libkdbasm.so", RTLD_NOW);
+	handle = dlopen("libkdbasm.so", RTLD_LAZY);
 	if (!handle) {
-		krr("While loading libkdbasm.so");
+		krr(dlerror());
 		return;
 	}
 	bitwiseOr = dlsym(handle, "bitwiseOr");
