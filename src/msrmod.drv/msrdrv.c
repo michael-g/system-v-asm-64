@@ -5,7 +5,7 @@
 
 #include "msrdrv.h"
 
-#define _MG_DEBUG
+//#define _MG_DEBUG
 #ifdef _MG_DEBUG
 #define dprintk(args...) printk(args);
 #else
@@ -64,7 +64,7 @@ static void write_msr(int ecx, unsigned int eax, unsigned int edx) {
 	__asm__ __volatile__("wrmsr" : : "c"(ecx), "a"(eax), "d"(edx));
 }
 
-static long long read_tsc()
+static long long read_tsc(void)
 {
 	unsigned eax, edx;
 	long long result;

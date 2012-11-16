@@ -17,8 +17,7 @@ enum MsrOperation {
 	MSR_READ = 1,
 	MSR_WRITE = 2,
 	MSR_STOP = 3,
-	MSR_RDTSC = 4,
-	U32_BITS = 0x7fFFffFF // ensure enum is 32-bit wide
+	MSR_RDTSC = 4
 };
 
 struct MsrInOut {
