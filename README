@@ -2,4 +2,4 @@ This is a personal research project into how to use 64-bit assembly language on
 Unix-based systems. For want of a better name, I named it after the document
 which describes its ABI. It's likely to be fairly simple stuff, but with plenty
 of comments as I will most likely post the source on my blog at 
-http://codetrauma.wordpress.com as I go along. 
+http://www.mindfruit.co.uk as I go along. 
