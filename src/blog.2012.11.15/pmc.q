@@ -68,7 +68,7 @@
 	kv:raze {[x;y] exec name!.pmc.msrs[syms;cmask;raze enlist[`os`usr],flags] from .pmc.preset where name=x}[;domain] each symvec;
 	result:.pmc.runtest[value kv;domain;32];
 	t:flip (`instAny`clkCore`clkRef,key kv)!result;
-	t:update mHz:(`int$ 2700 % clkRef % clkCore), nanos:(`int$clkRef % 2.7) from t;
+	t:update MHz:(`int$ 2700 % clkRef % clkCore), nanos:(`int$clkRef % 2.7) from t;
 	:t
  };
 
