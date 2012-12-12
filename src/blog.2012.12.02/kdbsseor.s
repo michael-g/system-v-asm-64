@@ -55,6 +55,10 @@ mgBitwiseOr:
     mov       %rdi, %r12                      # Save arg0: byte-vec
     mov       %rsi, %r13                      # Save arg1: byte-mask
 
+    m_save_regs
+    call      *0xa8(%rsp)
+    m_restore_regs
+
     movb      2(%rdi), %al                    # Copy arg0->t to lo-byte
     mov       %al, %bl                        # Copy type
     sub       $4, %bl                         # Check lower-bound
@@ -111,9 +115,10 @@ mgBitwiseOr:
     jmp       .LloopByte
 
 .LquadRegPre:
-    m_save_regs
-    call      *0xa8(%rsp)
-    m_restore_regs
+#    m_save_regs
+#    call      *0xa8(%rsp)
+#    m_restore_regs
+
 .LquadReg:
     movaps    0x10(%r12,%rdx,1), %xmm4        # Copy cache line into registers
     movaps    0x20(%r12,%rdx,1), %xmm5

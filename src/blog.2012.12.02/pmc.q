@@ -43,6 +43,9 @@
 `.pmc.preset insert (`StallCycles;`UOPS_DISPATCHED.THREAD;1i;`en`inv);
 `.pmc.preset insert (`MemUopsLd;`MEM_UOP_RETIRED.LOADS`MEM_UOP_RETIRED.ALL;0i;`en);
 `.pmc.preset insert (`MemUopsSv;`MEM_UOP_RETIRED.STORES`MEM_UOP_RETIRED.ALL;0i;`en);
+`.pmc.preset insert (`AvxToSse;`OTHER_ASSISTS.AVX_TO_SSE;0i;`en);
+`.pmc.preset insert (`SseToAvx;`OTHER_ASSISTS.SSE_TO_AVX;0i;`en);
+`.pmc.preset insert (`AvxStore;`OTHER_ASSISTS.AVX_STORE;0i;`en);
 
 /
  This function operates on vectors of typed-data, and can be used in a select statement: 
@@ -136,5 +139,21 @@
 / canned script 4
 .pmc.script4:{[domain]
 	.pmc.runscript[`UopsAny`MemUopsLd`L3Miss`StallCycles;domain]
+ };
+/ canned script 5
+.pmc.script5:{[domain]
+	.pmc.runscript[`UopsAny`AvxToSse`SseToAvx`AvxStore;domain]
+ };
+
+.pmc.setSse:{
+	.pmc.libname:"libkdbsseor.so"
+ };
+
+.pmc.setAvx:{
+	.pmc.libname:"libkdbavxor.so"
+ };
+
+.pmc.avgres:{[t;n]
+	flip key[d]!enlist each value d:avg[n#t]
  };
 system "c 45 191";

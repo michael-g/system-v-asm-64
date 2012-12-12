@@ -39,7 +39,10 @@
     pop        %r12
     pop        %rbx
     pop        %rbp
+    vzeroupper                              # Guard against expensive AVX->SSE transition 
     ret                                     # Exit to caller
+
+    .align 0x10                             # Align entry-point to 16-byte boundary
 
 mgBitwiseOr:
     push       %rbp                         # Push all non-durable registers
@@ -57,6 +60,11 @@ mgBitwiseOr:
     mov        %rcx, 0x00(%rsp)             # Store arg3
     mov        %rdi, %r12                   # Copy/store arg0
     mov        %rsi, %r13                   # Copy/store arg1
+
+    vzeroupper                              # Guard against expensive SSE->AVX transition
+    m_save_regs_avx
+    call       *0xa8(%rsp)
+    m_restore_regs_avx
 
 .LtestInputType:
     cmpb       $4, 2(%rdi)                  # Compare input vec-tye with 4
@@ -108,10 +116,13 @@ mgBitwiseOr:
     add        $0x10, %rdx
     jmp        .LloopStart
 
+
+    .align 0x10                             # Align jump target to 16-byte boundary
+
 .LprocessCacheLinePre:
-    m_save_regs_avx
-    call       *0xa8(%rsp)
-    m_restore_regs_avx
+#    m_save_regs_avx
+#    call       *0xa8(%rsp)
+#    m_restore_regs_avx
 
 .LprocessCacheLine:
     vmovaps    0x10(%r12,%rdx,1), %ymm4     #
