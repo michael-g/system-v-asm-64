@@ -48,19 +48,22 @@ readcap:{
 
 
 
-tls.ch.idxExtns:{                                                  / return Extension-boundary indices which can be used as the RH argument to 'cut'
-  -1_{if[y=count x;:y];y+4+0x0 sv x y+2 3}[x]\[y]
+.tls.hs.idxExtns:{                                                  / return Extension-boundary indices which can be used as the RH argument to 'cut'
+  -1_{$[y=count x;y;y+4+0x0 sv x y+2 3]}[x]\[y] // TODO you need to add the upper-limit here (introduce a third variable), then update ch.parse and sh.parse
  }
-tls.ch.cutExtns:{                                                  / given the Extension data (payload), cut the byte vector into discrete extension (id;len;data) byte vector values
-  0 2 4 cut/: tls.ch.idxExtns[x;y] cut x
+.tls.hs.cutExtns:{                                                  / given the Extension data (payload), cut the byte vector into discrete extension (id;len;data) byte vector values
+  0 2 4 cut/: .tls.hs.idxExtns[x;y] cut x
  }
-tls.cph.load:{                                                     / from https://www.thesprawl.org/research/tls-and-ssl-cipher-suites/ 
+.tls.hs.getExtnNames:{
+  exec name from .tls.xtn.load[] where ID in 6h$0x0 sv/: x
+ }
+.tls.cph.load:{                                                     / from https://www.thesprawl.org/research/tls-and-ssl-cipher-suites/ 
   update CipherID:{value "0x",4_x} each CipherID from ("*SSSSIS";enlist ",") 0: `:ciphers.csv
  }
-tls.xtn.load:{                                                     / from https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
+.tls.xtn.load:{                                                     / from https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml
   ("ISS";enlist",") 0:`:extensions.csv
  }
-tls.ch.parse:{
+.tls.ch.parse:{
   len:0x0 sv 0x00,x 6+til 3                                        / client-hello encodes length as 24 bits/3 bytes 
  ;pcl:x 9 10                                                       / selected protocol is written as two bytes
  ;rnd:x 11+til 32                                                  / 32 bytes of random data
@@ -69,26 +72,42 @@ tls.ch.parse:{
  ;off:44+idz                                                       / numbers now variable, so keep an 'offset' value
  ;chz:0x0 sv x off+0 1                                             / cipher data length is written as a uint16
  ;cph:2 cut x (off+:2)+til chz                                     / ciphers are written as 2-byte values
- ;cph:exec Name from tls.cph.load[] where CipherID in cph          / convert cipher ID values to names
- ;zsz:x (off+:chz)                                                 / compression algorithm's lenght is a single byte
+ ;cph:exec Name from .tls.cph.load[] where CipherID in cph         / convert cipher ID values to names
+ ;zsz:x (off+:chz)                                                 / compression algorithm's length is a single byte
  ;zlg:x (off+:1)+til zsz                                           / read compression algos data
  ;exz:0x0 sv x (off+:zsz)+0 1                                      / extension data is written as a uint16
- ;exn:(tls.ch.cutExtns[x;off+:2])[;0 2]
- ;exn:(exec name from tls.xtn.load[] where ID in 6h$0x0 sv/: exn[;0])!exn[;1]
+ ;exn:(.tls.hs.cutExtns[x;off+:2])[;0 2]
+ ;exn:.tls.hs.getExtnNames[0x0000,/:exn[;0]]!exn[;1]
  ;ch:`Len`Proto`Rnd`IdLen`Id`CipherLen`Ciphers`ZLen`ZAlgos`ExtnLen`Extns!(len;pcl;rnd;idz;sid;chz;cph;zsz;zlg;exz;exn)
  }
-tls.hs.parse:{
+.tls.sh.parse:{
+  len:0x0 sv 0x00,x 6+til 3                                        / server-hello encodes length as 24 bits/3 bytes 
+ ;pcl:x 9 10                                                       / protocol is written as two bytes
+ ;rnd:x 11+til 32                                                  / 32 bytes of random data
+ ;idz:6h$x 43                                                      / SessionID length is written as a single byte
+ ;sid:x 44+til idz                                                 / SessionID data
+ ;cph:x (off:44+idz)+0 1                                           / the chosen cipher is encoded as a byte-pair
+ ;cph:first exec Name from .tls.cph.load[] where CipherID ~\: cph  / convert cipher ID values to names
+ ;zlg:x off+:2                                                     / read the selected compression algo
+ ;exz:0N!0x0 sv x (off+:1)+0 1                                     / extension data is written as a uint16
+ ;exn:(.tls.hs.cutExtns[x;off+:2])[;0 2]
+ ;exn:.tls.hs.getExtnNames[0x0000,/:exn[;0]]!exn[;1]
+ ;`Len`Proto`Rnd`SId`Ciphers`ZAlgos`Extns!(len;pcl;rnd;sid;cph;zlg;exn)
+ }
+.tls.hs.parse:{
   hdr:`MsgTyp`Proto`MsgLen`HsTyp!(`Handshake;x 1 2;0x0 sv x 3 4;`) / protocol is bytes[1 2], message length bytes[3 4]
  ;$[0x01~typ:x 5                                                   / handshake type is encoded in byte[5]; client-hello is value 0x01
-   ;[hdr[`HsTyp]:`ClientHello;`Header`Record!(hdr;tls.ch.parse x)] / delegate to client-hello parser
+   ;[hdr[`HsTyp]:`ClientHello;`Header`Record!(hdr;.tls.ch.parse x)] / delegate to client-hello parser
+   ;0x02~typ
+   ;[hdr[`HsTyp]:`ServerHello;`Header`Record!(hdr;.tls.sh.parse x)] / delegate to server-hello parser
    ;'"Cannot handle handshake type ",string typ
    ]
  }
-tls.msg.parse:{
+.tls.msg.parse:{
   if[not 0x03~x 1;'"Cannot parse non-TLS messages yet"]
  ;if[(5+0x0 sv x 3 4)>count x;'"Insufficient data: total message length is ",string 5+0x0 sv x 3 4]
  ;$[0x16~typ:first x                                               / 22=handshake
-   ;tls.hs.parse x
+   ;.tls.hs.parse x
    ;'"Cannot handle message type ",string typ
    ]
  }
