@@ -1,3 +1,6 @@
+#
+# Generic makefile
+#
 SOURCES=main.c hashtable.c
 OBJECTS=$(SOURCES:.c=.o)
 CFLAGS=-I. -Wall -std=c99 -O2
